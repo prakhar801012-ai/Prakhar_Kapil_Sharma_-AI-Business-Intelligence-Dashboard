@@ -5,307 +5,251 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 
-import seaborn as sns
-import matplotlib.pyplot as plt
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import LabelEncoder
 
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
+from scipy.stats import zscore
 
 st.set_page_config(
     page_title="AI Business Intelligence",
-    page_icon="📊",
     layout="wide"
 )
 
-st.title("📊 AI Business Intelligence Dashboard")
-st.markdown("---")
+st.title("🤖 AI Business Intelligence Smart Dashboard")
 
-# Sidebar
-
-st.sidebar.header("Upload Dataset")
-
-file = st.sidebar.file_uploader(
-    "Upload CSV",
-    type=["csv"]
+uploaded_file = st.file_uploader(
+    "Upload CSV or Excel",
+    type=["csv","xlsx"]
 )
 
-if file is None:
+if uploaded_file:
 
-    st.info("Upload a business dataset to begin.")
-    st.stop()
+    if uploaded_file.name.endswith(".csv"):
+        df = pd.read_csv(uploaded_file)
 
-df = pd.read_csv(file)
+    else:
+        df = pd.read_excel(uploaded_file)
 
-st.success("Dataset Loaded Successfully")
+    st.success("Dataset Loaded")
 
-st.write(df.head())
+    st.subheader("Dataset Preview")
 
-###########################################################
-# KPI
-###########################################################
+    st.dataframe(df)
 
-st.subheader("Business KPIs")
+    ####################################
+    # DATA CLEANING
+    ####################################
 
-col1,col2,col3,col4=st.columns(4)
+    st.header("🧹 AI Preprocessing")
 
-numeric=df.select_dtypes(include=np.number)
+    duplicate_count = df.duplicated().sum()
 
-with col1:
-    st.metric(
-        "Rows",
-        len(df)
+    st.write("Duplicates:", duplicate_count)
+
+    df.drop_duplicates(inplace=True)
+
+    numeric = df.select_dtypes(include=np.number).columns
+
+    categorical = df.select_dtypes(exclude=np.number).columns
+
+    if len(numeric)>0:
+
+        imputer = SimpleImputer(strategy="median")
+
+        df[numeric]=imputer.fit_transform(df[numeric])
+
+    if len(categorical)>0:
+
+        imputer2 = SimpleImputer(strategy="most_frequent")
+
+        df[categorical]=imputer2.fit_transform(df[categorical])
+
+    st.success("Missing Values Filled")
+
+    ####################################
+    # OUTLIERS
+    ####################################
+
+    st.header("📌 Outlier Detection")
+
+    if len(numeric)>0:
+
+        z=np.abs(zscore(df[numeric]))
+
+        outliers=(z>3).sum()
+
+        st.write(outliers)
+
+    ####################################
+    # DATA SUMMARY
+    ####################################
+
+    st.header("📊 Dataset Summary")
+
+    c1,c2,c3,c4=st.columns(4)
+
+    c1.metric("Rows",len(df))
+
+    c2.metric("Columns",len(df.columns))
+
+    c3.metric("Numeric",len(numeric))
+
+    c4.metric("Categorical",len(categorical))
+
+    st.write(df.describe())
+
+    ####################################
+    # CORRELATION
+    ####################################
+
+    if len(numeric)>=2:
+
+        st.header("Correlation Heatmap")
+
+        corr=df[numeric].corr()
+
+        fig=px.imshow(
+            corr,
+            text_auto=True,
+            color_continuous_scale="RdBu"
+        )
+
+        st.plotly_chart(fig,use_container_width=True)
+
+    ####################################
+    # BAR CHART
+    ####################################
+
+    st.header("Interactive Graph")
+
+    col1,col2=st.columns(2)
+
+    x=col1.selectbox("X",df.columns)
+
+    y=col2.selectbox("Y",numeric)
+
+    chart=st.selectbox(
+        "Chart",
+        [
+            "Bar",
+            "Line",
+            "Scatter",
+            "Histogram",
+            "Box"
+        ]
     )
 
-with col2:
-    st.metric(
-        "Columns",
-        len(df.columns)
-    )
+    if chart=="Bar":
 
-with col3:
-    st.metric(
-        "Missing Values",
-        df.isnull().sum().sum()
-    )
+        fig=px.bar(df,x=x,y=y)
 
-with col4:
-    st.metric(
-        "Numeric Features",
-        len(numeric.columns)
-    )
+    elif chart=="Line":
 
-st.markdown("---")
+        fig=px.line(df,x=x,y=y)
 
-###########################################################
-# Statistics
-###########################################################
+    elif chart=="Scatter":
 
-st.subheader("Dataset Statistics")
+        fig=px.scatter(df,x=x,y=y)
 
-st.dataframe(df.describe())
+    elif chart=="Histogram":
 
-###########################################################
-# Charts
-###########################################################
+        fig=px.histogram(df,x=x)
 
-st.subheader("Interactive Charts")
+    else:
 
-numeric_columns=numeric.columns.tolist()
-
-if len(numeric_columns)>=1:
-
-    column=st.selectbox(
-        "Select Numeric Column",
-        numeric_columns
-    )
-
-    fig=px.histogram(
-        df,
-        x=column,
-        nbins=40,
-        color_discrete_sequence=["royalblue"]
-    )
+        fig=px.box(df,x=x,y=y)
 
     st.plotly_chart(fig,use_container_width=True)
 
-###########################################################
-# Scatter Plot
-###########################################################
+    ####################################
+    # PIE
+    ####################################
 
-if len(numeric_columns)>=2:
+    if len(categorical)>0:
 
-    x=st.selectbox(
-        "X Axis",
-        numeric_columns,
-        key=1
+        st.header("Pie Chart")
+
+        pie=st.selectbox("Category",categorical)
+
+        fig=px.pie(
+            df,
+            names=pie
+        )
+
+        st.plotly_chart(fig,use_container_width=True)
+
+    ####################################
+    # 3D GRAPH
+    ####################################
+
+    if len(numeric)>=3:
+
+        st.header("3D Scatter")
+
+        x3=st.selectbox("3D X",numeric,key=1)
+
+        y3=st.selectbox("3D Y",numeric,key=2)
+
+        z3=st.selectbox("3D Z",numeric,key=3)
+
+        color=st.selectbox(
+            "Color",
+            df.columns
+        )
+
+        fig=px.scatter_3d(
+            df,
+            x=x3,
+            y=y3,
+            z=z3,
+            color=color
+        )
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+
+    ####################################
+    # AI INSIGHTS
+    ####################################
+
+    st.header("🧠 AI Business Insights")
+
+    st.success(f"""
+Dataset contains **{len(df)} records**.
+
+• Numeric Features : {len(numeric)}
+
+• Categorical Features : {len(categorical)}
+
+• Missing Values Automatically Filled
+
+• Duplicates Removed
+
+• Ready for Machine Learning
+
+• Correlation Matrix Generated
+
+• Interactive Dashboard Created
+
+Recommendation:
+
+✔ Clean Dataset
+
+✔ Check highly correlated features
+
+✔ Remove unnecessary columns
+
+✔ Perform prediction or clustering
+""")
+
+    ####################################
+    # DOWNLOAD
+    ####################################
+
+    st.download_button(
+        "Download Clean Dataset",
+        df.to_csv(index=False),
+        "clean_dataset.csv"
     )
-
-    y=st.selectbox(
-        "Y Axis",
-        numeric_columns,
-        index=1,
-        key=2
-    )
-
-    fig=px.scatter(
-        df,
-        x=x,
-        y=y,
-        color=y,
-        size=y
-    )
-
-    st.plotly_chart(fig,use_container_width=True)
-
-###########################################################
-# Correlation
-###########################################################
-
-st.subheader("Correlation Heatmap")
-
-if len(numeric_columns)>=2:
-
-    corr=numeric.corr()
-
-    fig,ax=plt.subplots(figsize=(10,6))
-
-    sns.heatmap(
-        corr,
-        annot=True,
-        cmap="coolwarm",
-        ax=ax
-    )
-
-    st.pyplot(fig)
-
-###########################################################
-# Top Values
-###########################################################
-
-st.subheader("Top Records")
-
-st.dataframe(df.head(20))
-
-###########################################################
-# Machine Learning Forecast
-###########################################################
-
-st.subheader("AI Forecast")
-
-if len(numeric_columns)>=2:
-
-    target=st.selectbox(
-        "Target Variable",
-        numeric_columns,
-        key=10
-    )
-
-    features=[i for i in numeric_columns if i!=target]
-
-    X=df[features]
-
-    y=df[target]
-
-    X=X.fillna(X.mean())
-
-    y=y.fillna(y.mean())
-
-    X_train,X_test,y_train,y_test=train_test_split(
-        X,
-        y,
-        test_size=0.2,
-        random_state=42
-    )
-
-    model=LinearRegression()
-
-    model.fit(X_train,y_train)
-
-    score=model.score(X_test,y_test)
-
-    st.metric(
-        "Prediction Accuracy (R²)",
-        round(score,3)
-    )
-
-###########################################################
-# Business Insights
-###########################################################
-
-st.subheader("AI Business Insights")
-
-insights=[]
-
-if df.isnull().sum().sum()>0:
-
-    insights.append("Dataset contains missing values.")
-
-else:
-
-    insights.append("No missing values detected.")
-
-if len(numeric_columns)>0:
-
-    for col in numeric_columns:
-
-        if df[col].std()>df[col].mean():
-
-            insights.append(
-                f"{col} has high variability."
-            )
-
-        if df[col].mean()>df[col].median():
-
-            insights.append(
-                f"{col} is positively skewed."
-            )
-
-for i in insights:
-
-    st.success(i)
-
-###########################################################
-# Recommendation Engine
-###########################################################
-
-st.subheader("Business Recommendations")
-
-recommend=[]
-
-if df.isnull().sum().sum()>0:
-
-    recommend.append(
-        "Clean missing values."
-    )
-
-recommend.append(
-    "Monitor high variance features."
-)
-
-recommend.append(
-    "Improve forecasting using larger datasets."
-)
-
-recommend.append(
-    "Create customer segmentation."
-)
-
-recommend.append(
-    "Monitor monthly KPIs."
-)
-
-recommend.append(
-    "Automate report generation."
-)
-
-for r in recommend:
-
-    st.info(r)
-
-###########################################################
-# Download CSV
-###########################################################
-
-st.subheader("Download Processed Data")
-
-csv=df.to_csv(index=False)
-
-st.download_button(
-
-    "Download CSV",
-
-    csv,
-
-    file_name="processed_data.csv",
-
-    mime="text/csv"
-
-)
-
-###########################################################
-# Footer
-###########################################################
-
-st.markdown("---")
-
-st.caption("AI Business Intelligence Dashboard")
