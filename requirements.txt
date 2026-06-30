@@ -1,45 +1,11 @@
-streamlit>=1.40.0
-pandas>=2.2.0
-numpy>=1.26.0
-plotly>=5.24.0
-matplotlib>=3.9.0
-seaborn>=0.13.2
-scikit-learn>=1.5.0
-openpyxl>=3.1.5
-
-# AI
-openai>=1.98.0
-langchain>=0.3.0
-langchain-openai>=0.2.0
-tiktoken>=0.8.0
-
-# Database
-sqlalchemy>=2.0.35
-psycopg2-binary>=2.9.10
-pymysql>=1.1.1
-
-# Data Processing
-scipy>=1.14.0
-statsmodels>=0.14.4
-joblib>=1.4.2
-
-# Reports
-xlsxwriter>=3.2.0
-fpdf2>=2.8.2
-
-# Environment Variables
-python-dotenv>=1.0.1
-
-# Optional ML
-xgboost>=2.1.1
-lightgbm>=4.5.0
-catboost>=1.2.7
-
-# Time Series
-prophet>=1.1.6
-
-# Visualization
-altair>=5.4.1
-
-# Image Processing (optional)
-Pillow>=10.4.0
+streamlit
+pandas
+numpy
+plotly
+matplotlib
+seaborn
+scikit-learn
+openpyxl
+scipy
+ydata-profiling
+streamlit-pandas-profiling
