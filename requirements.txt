@@ -1,11 +1,62 @@
-streamlit
-pandas
-numpy
-plotly
-matplotlib
-seaborn
-scikit-learn
-openpyxl
-scipy
-ydata-profiling
-streamlit-pandas-profiling
+streamlit>=1.36.0
+pandas>=2.2.2
+numpy>=1.26.4
+plotly>=5.24.0
+matplotlib>=3.9.0
+seaborn>=0.13.2
+scikit-learn>=1.5.1
+scipy>=1.14.0
+openpyxl>=3.1.5
+xlsxwriter>=3.2.0
+
+# Data Profiling
+ydata-profiling>=4.9.0
+streamlit-pandas-profiling>=0.1.3
+
+# Statistical Analysis
+statsmodels>=0.14.2
+
+# Machine Learning
+xgboost>=2.1.1
+lightgbm>=4.5.0
+catboost>=1.2.7
+
+# Explainable AI
+shap>=0.46.0
+
+# Feature Engineering
+feature-engine>=1.8.1
+
+# Interactive Tables
+streamlit-aggrid>=1.0.5
+
+# Date Handling
+python-dateutil>=2.9.0
+
+# PDF Reports
+reportlab>=4.2.2
+
+# Excel Support
+pyarrow>=17.0.0
+
+# Database Connectivity
+sqlalchemy>=2.0.35
+
+# Visualization
+networkx>=3.3
+wordcloud>=1.9.3
+
+# Image Processing
+pillow>=10.4.0
+
+# Optional Forecasting
+prophet>=1.1.6
+
+# AutoML
+pycaret>=3.3.2
+
+# Progress Bars
+tqdm>=4.66.5
+
+# Environment Variables
+python-dotenv>=1.0.1
